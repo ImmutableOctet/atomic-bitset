@@ -3,6 +3,7 @@
 #include <utility>
 #include <type_traits>
 #include <atomic>
+#include <mutex>
 #include <vector>
 #include <memory>
 #include <tuple>
@@ -238,7 +239,10 @@ namespace immutableoctet
 
 			atomic_bit_reference& operator=(value_type value)
 			{
-				impl::set_bit(get_underlying(), get_bit_offset(), value);
+				if (remote_value)
+				{
+					impl::set_bit(get_underlying(), get_bit_offset(), value);
+				}
 
 				return *this;
 			}
@@ -653,6 +657,8 @@ namespace immutableoctet
 
 			underlying_type emplace_back(value_type value)
 			{
+				//auto resize_lock = std::scoped_lock { resize_mutex };
+
 				const auto index = next_index();
 				
 				allocate_pages_for_index(index);
@@ -669,6 +675,8 @@ namespace immutableoctet
 
 			value_type pop_back()
 			{
+				//auto resize_lock = std::scoped_lock { resize_mutex };
+
 				if (empty())
 				{
 					return {};
@@ -715,7 +723,12 @@ namespace immutableoctet
 					return 1;
 				}
 
-				return static_cast<size_t>(size() / static_cast<size_t>(bit_stride));
+				return
+				(
+					(static_cast<size_t>(size() / static_cast<size_t>(bit_stride)))
+					+
+					static_cast<size_t>((size() % static_cast<size_t>(bit_stride)) > 0)
+				);
 			}
 
 			bool empty() const
@@ -753,17 +766,22 @@ namespace immutableoctet
 				{
 					return size();
 				}
-				else if (requested_size < size())
+				else
 				{
-					size_in_bits = requested_size;
+					auto resize_lock = std::scoped_lock { resize_mutex };
 
-					// TODO: Look into implementing mass-zeroing of bits.
-				}
-				else // if (requested_size > size())
-				{
-					reserve(requested_size);
+					if (requested_size < size())
+					{
+						size_in_bits = requested_size;
 
-					size_in_bits = requested_size;
+						// TODO: Look into implementing mass-zeroing of bits.
+					}
+					else // if (requested_size > size())
+					{
+						reserve(requested_size);
+
+						size_in_bits = requested_size;
+					}
 				}
 
 				return size();
@@ -775,6 +793,8 @@ namespace immutableoctet
 
 				if (index_as_size >= size())
 				{
+					auto resize_lock = std::scoped_lock { resize_mutex };
+
 					allocate_pages_for_index(requested_index);
 
 					size_in_bits = (index_as_size + static_cast<size_t>(1));
@@ -785,6 +805,8 @@ namespace immutableoctet
 
 			void clear()
 			{
+				auto resize_lock = std::scoped_lock { resize_mutex };
+
 				size_in_bits = 0;
 			}
 
@@ -795,7 +817,7 @@ namespace immutableoctet
 
 			const_iterator cend() const
 			{
-				return const_iterator { *this, next_index() };
+				return const_iterator { *this, next_index() }; // last_index()
 			}
 
 			iterator begin()
@@ -805,7 +827,7 @@ namespace immutableoctet
 
 			iterator end()
 			{
-				return iterator { *this, next_index() };
+				return iterator { *this, next_index() }; // last_index()
 			}
 
 			const_iterator begin() const
@@ -889,6 +911,8 @@ namespace immutableoctet
 
 			size_t resize_pages(size_t pages_to_hold, T default_element_value)
 			{
+				auto resize_lock = std::scoped_lock { resize_mutex };
+
 				while (pages_allocated() < pages_to_hold)
 				{
 					pages.emplace_back(default_element_value);
@@ -905,6 +929,8 @@ namespace immutableoctet
 				}
 				else
 				{
+					auto resize_lock = std::scoped_lock { resize_mutex };
+
 					pages.resize(static_cast<std::size_t>(pages_to_hold));
 
 					return pages_allocated();
@@ -935,9 +961,12 @@ namespace immutableoctet
 				return allocate_pages_up_to(page_index);
 			}
 
-			size_t size_in_bits = {};
+			std::atomic<size_t> size_in_bits = { std::size_t {} }; // size_t
 
 			container_type pages;
+
+		private:
+			std::recursive_mutex resize_mutex;
 	};
 
 	// Defaults to 64-bit unsigned integers: 512 x 8 x 8 (4096 bytes, 32768 bits)
