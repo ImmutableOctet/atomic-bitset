@@ -1,47 +1,37 @@
-#include "atomic_bitset/atomic_bitset.hpp"
+#include <catch2/catch_test_macros.hpp>
 
-#include <iostream>
-#include <limits>
-#include <array>
+#include <immutableoctet/atomic_bitset/atomic_bitset.hpp>
 
-int main()
+#include <cstddef>
+#include <cstdint>
+
+TEST_CASE("immutableoctet::atomic_bitset", "[atomic-bitset]")
 {
-	auto bitset = immutableoctet::basic_atomic_bitset<std::uint64_t, 512, std::numeric_limits<std::uint64_t>::max()>{}; // immutableoctet::atomic_bitset {};
+	using bitset_t = immutableoctet::basic_atomic_bitset<std::uint64_t, 512, std::numeric_limits<std::uint64_t>::max()>;
 
-	/*
-	bitset.emplace_back(false);
-	bitset.emplace_back(true);
-	bitset.emplace_back(true);
-	bitset.emplace_back(false);
-	bitset.emplace_back(true);
-	bitset.emplace_back(true);
-	bitset.emplace_back(false);
-	bitset.emplace_back(true);
-	bitset.emplace_back(false);
-	*/
-
-	bitset[0] = false;
-
-	bitset[99] = false;
-
-	int sum = 0;
-
-	for (const bool bit : bitset)
+	SECTION("Free indexing")
 	{
-		sum += bit;
+		auto bitset = bitset_t {};
+
+		bitset[0] = false;
+
+		REQUIRE(bitset.size() == 1);
+		REQUIRE(bitset.element_count() == 1);
+		REQUIRE(bitset.page_count() >= 1);
+
+		bitset[99] = false;
+
+		REQUIRE(bitset.size() == 100);
+		REQUIRE(bitset.element_count() == 2);
+		REQUIRE(bitset.page_count() >= 1);
+
+		auto sum_of_bits = std::size_t {};
+
+		for (const bool bit : bitset)
+		{
+			sum_of_bits += static_cast<std::size_t>(bit);
+		}
+
+		REQUIRE(sum_of_bits == 98);
 	}
-
-	std::cout << "Size: " << bitset.size() << '\n';
-	std::cout << "Capacity: " << bitset.capacity() << '\n';
-	std::cout << "Pages: " << bitset.page_count() << '\n';
-	std::cout << "Sum: " << sum << '\n';
-
-	/*
-	for (const auto bit : bitset)
-	{
-		std::cout << (bit) ? '1' : '0';
-	}
-	*/
-
-	return 0;
 }

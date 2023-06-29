@@ -17,15 +17,16 @@ include(Catch)
 
 # ---- Tests ----
 
-add_executable(atomic-bitset_test source/atomic-bitset_test.cpp)
+add_executable(atomic_bitset_test source/atomic_bitset_test.cpp)
+
 target_link_libraries(
-    atomic-bitset_test PRIVATE
-    atomic-bitset::atomic-bitset
+    atomic_bitset_test PRIVATE
+    immutableoctet::atomic-bitset
     Catch2::Catch2WithMain
 )
-target_compile_features(atomic-bitset_test PRIVATE cxx_std_20)
+target_compile_features(atomic_bitset_test PRIVATE cxx_std_20)
 
-catch_discover_tests(atomic-bitset_test)
+catch_discover_tests(atomic_bitset_test)
 
 # ---- End-of-file commands ----
 
