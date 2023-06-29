@@ -1,10 +1,6 @@
 {
   "name": "atomic-bitset",
   "version-semver": "0.1.0",
-  "dependencies": [
-    {
-    }
-  ],
   "default-features": [],
   "features": {
     "test": {
