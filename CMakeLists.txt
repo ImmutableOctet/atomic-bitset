@@ -31,9 +31,6 @@ target_include_directories(
 
 target_compile_features(atomic-bitset_atomic-bitset INTERFACE cxx_std_20)
 
-find_package(fmt REQUIRED)
-target_link_libraries(atomic-bitset_atomic-bitset INTERFACE fmt::fmt)
-
 # ---- Install rules ----
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
