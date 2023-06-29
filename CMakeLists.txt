@@ -15,21 +15,21 @@ include(cmake/variables.cmake)
 
 # ---- Declare library ----
 
-add_library(atomic-bitset_atomic-bitset INTERFACE)
-add_library(atomic-bitset::atomic-bitset ALIAS atomic-bitset_atomic-bitset)
+add_library(immutableoctet_atomic-bitset INTERFACE)
+add_library(immutableoctet::atomic-bitset ALIAS immutableoctet_atomic-bitset)
 
 set_property(
-    TARGET atomic-bitset_atomic-bitset PROPERTY
+    TARGET immutableoctet_atomic-bitset PROPERTY
     EXPORT_NAME atomic-bitset
 )
 
 target_include_directories(
-    atomic-bitset_atomic-bitset ${warning_guard}
+    immutableoctet_atomic-bitset ${warning_guard}
     INTERFACE
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 )
 
-target_compile_features(atomic-bitset_atomic-bitset INTERFACE cxx_std_20)
+target_compile_features(immutableoctet_atomic-bitset INTERFACE cxx_std_20)
 
 # ---- Install rules ----
 

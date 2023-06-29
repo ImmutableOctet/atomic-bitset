@@ -21,7 +21,7 @@ install(
 )
 
 install(
-    TARGETS atomic-bitset_atomic-bitset
+    TARGETS immutableoctet_atomic-bitset
     EXPORT atomic-bitsetTargets
     INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )
